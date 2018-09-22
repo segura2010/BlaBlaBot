@@ -1,0 +1,18 @@
+{
+    "ApiKey": "",
+    
+    "RedisDB": {
+        "Host": "localhost",
+        "Port": "6379",
+        "Pass": "",
+    },
+
+    "TelegramBot":{
+        "Token": ""
+    },
+    
+    "Maintenance":{
+        "Enabled": false,
+        "Description": "🤖 I am currently down for maintenance. Please, try again later."
+    }
+}
