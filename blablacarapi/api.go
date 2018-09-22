@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"io/ioutil"
 	"encoding/json"
-	"fmt"
 
 	"BlaBlaBot/config"
 )
@@ -33,8 +32,6 @@ func GetTrips(from, to, locale, currency, date string) (TripsResponse, error){
 	if err != nil{
 		return TripsResponse{}, err
 	}
-
-	fmt.Printf(string(body))
 
 	var trip TripsResponse
 	err = json.Unmarshal(body, &trip)

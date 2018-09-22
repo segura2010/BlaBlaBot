@@ -6,6 +6,7 @@ import (
     "flag"
     "time"
     "strconv"
+    "strings"
 
     "BlaBlaBot/bot"
     "BlaBlaBot/blablacarapi"
@@ -51,36 +52,67 @@ func main(){
             panic("Unable to create TelegramBot")
         }
         
-        sendOptions := telebot.SendOptions{
-            ParseMode: "Markdown",
-        }
-        
         // check for trips to send alerts :)
         for{
             // listen for messages...
+            cache := make(map[string]blablacarapi.TripsResponse)
             tasks, _ := redisdb.GetTasks()
             for _, t := range tasks{
                 task, _ := redisdb.GetTaskByKey(t)
                 splittedTask := strings.Split(t, ":")
                 date := splittedTask[2]
                 places := strings.Split(task, ":")
-
-                trips, err := blablacarapi.GetTrips(places[0], places[1], "es_ES", "EUR", date)
-                if err != nil{
-                    log.Printf("Error getting trips: %s", err)
-                    continue
-                }
-
-                // send alert for trip
                 uId, err := strconv.Atoi(splittedTask[1])
                 if err != nil{
                     continue
                 }
-                bot.SendMessage(uId, , &sendOptions)
 
-                // save the sent alert to avoid sending it in the future !!
+                // check if trip passed
+                now := time.Now()
+                taskDate, err := time.Parse("2006-01-02", date)
+                if err != nil{
+                    continue
+                }
+                diff := now.Sub(taskDate)
+                if diff > 0{
+                    // task time passed, delete
+                    log.Printf("Task %s date passed, deleting everything", t)
+                    go redisdb.DeleteAllTaskRelatedStuff(date)
+                    continue
+                }
+
+                var trips blablacarapi.TripsResponse
+                exists := false
+
+                if trips, exists = cache[date +":"+ task]; !exists{
+                    // non cached task
+                    trips, err = blablacarapi.GetTrips(places[0], places[1], config.GetInstance().Locale, config.GetInstance().Currency, date)
+                    if err != nil{
+                        log.Printf("Error getting trips: %s", err)
+                        continue
+                    }
+                    // cache trip
+                    cache[date +":"+ task] = trips
+                }else{
+                    log.Printf("Task %s already cached!", (date +":"+ task))
+                }
+
+                for _, trip := range trips.Trips{
+                    // check if already sent
+                    alreadySent, _ := redisdb.GetAlertByKey(redisdb.AlertPreffix() + splittedTask[1] +":"+ date +":"+ trip.Permanent_Id)
+                    if alreadySent != ""{
+                        log.Printf("Alert %s already sent", trip.Permanent_Id)
+                        continue
+                    }
+
+                    // send alert for trip
+                    bot.SendTripAlert(int64(uId), trip)
+
+                    // save the sent alert to avoid sending it in the future !!
+                    redisdb.AddAlert(splittedTask[1] +":"+ date +":"+ trip.Permanent_Id)
+                }
             }
-            time.Sleep(time.Duration(5) * time.Minute)
+            time.Sleep(time.Duration(config.GetInstance().RefreshTime) * time.Minute)
         }
     }
     

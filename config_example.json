@@ -1,5 +1,11 @@
 {
     "ApiKey": "",
+    "Locale":"es_ES",
+    "Currency":"EUR",
+    "RefreshTime": 10,
+    "MaxTaskTime": 240,
+
+    "Whitelist":["*"],
     
     "RedisDB": {
         "Host": "localhost",

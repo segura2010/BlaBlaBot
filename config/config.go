@@ -10,6 +10,13 @@ import (
 // This is the struct that the config.json must have
 type MyConfig struct {
     ApiKey string // BlaBlaCar API Key
+    Locale string // https://dev.blablacar.com/docs/versions/1.0/locales
+    Currency string
+
+    RefreshTime int // in minutes (every X minutes it will check the tasks and send the alerts)
+    MaxTaskTime int // in hours (max time I can subscribe to a trip+date; example: If MaxTaskTime=10, I cannot subscribe to alert for trips that happens in more than 10 hours.)
+
+    Whitelist []string // whitelist of telegram ids to allow use the bot (use "*" to allow everyone)
     
     // DB info
     RedisDB RedisConfig
@@ -48,6 +55,11 @@ func CreateInstance(filename string) *MyConfig {
         // use defaults
         instance = &MyConfig{
             ApiKey: "",
+            Locale: "es_ES",
+            Currency: "EUR",
+            RefreshTime: 10, // 10 minutes
+            MaxTaskTime: 240, // 240 hours (10 days),
+            Whitelist: []string{"*"},
             RedisDB: RedisConfig{
                 Host: "localhost",
                 Port: "6379",

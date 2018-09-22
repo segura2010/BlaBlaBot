@@ -38,6 +38,13 @@ func TaskPreffix() string{
 	return "task:"
 }
 
+// An alert element is used to remember if we sent an alert for a trip or not
+// The structure is:
+// alert:USERID:YYYY-MM-DD:TRIPID
+func AlertPreffix() string{
+	return "alert:"
+}
+
 
 func AddTask(userid, date, departure, arrival string) (error){
 	err := GetInstance().Set(TaskPreffix() + userid +":"+ date, departure +":"+ arrival, 0).Err()
@@ -85,6 +92,43 @@ func GetTasks() ([]string, error){
 	return tasks, err
 }
 
+func AddAlert(key string) error{
+	err := GetInstance().Set(AlertPreffix() + key, "sent", 0).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+func GetAlertByKey(key string) (string, error){
+	alert, err := GetInstance().Get(key).Result()
+	return alert, err
+}
+
+
+func DeleteKey(key string) (error){
+	err := GetInstance().Del(key).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ONLY CALL THIS FUNCTION WHEN TASK_DATE < NOW
+// It remove everything related to a task in the DB
+// Because we do not need to save the data once the date has passed
+func DeleteAllTaskRelatedStuff(date string){
+	tasks, _ := GetInstance().Keys("*:*:"+ date).Result()
+	for _, t := range tasks{
+		DeleteKey(t)
+	}
+
+	alerts, _ := GetInstance().Keys("*:*:"+ date +":*").Result()
+	for _, a := range alerts{
+		DeleteKey(a)
+	}
+}
 
 func Flush() (error){
 	return GetInstance().FlushDB().Err()
