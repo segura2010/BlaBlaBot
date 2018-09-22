@@ -77,7 +77,7 @@ func main(){
                 if diff > 0{
                     // task time passed, delete
                     log.Printf("Task %s date passed, deleting everything", t)
-                    go redisdb.DeleteAllTaskRelatedStuff(date)
+                    go redisdb.DeleteAllTaskRelatedStuff(splittedTask[1], date)
                     continue
                 }
 

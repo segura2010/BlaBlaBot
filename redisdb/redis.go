@@ -118,13 +118,13 @@ func DeleteKey(key string) (error){
 // ONLY CALL THIS FUNCTION WHEN TASK_DATE < NOW
 // It remove everything related to a task in the DB
 // Because we do not need to save the data once the date has passed
-func DeleteAllTaskRelatedStuff(date string){
-	tasks, _ := GetInstance().Keys("*:*:"+ date).Result()
+func DeleteAllTaskRelatedStuff(uid, date string){
+	tasks, _ := GetInstance().Keys("*:"+ uid +":"+ date).Result()
 	for _, t := range tasks{
 		DeleteKey(t)
 	}
 
-	alerts, _ := GetInstance().Keys("*:*:"+ date +":*").Result()
+	alerts, _ := GetInstance().Keys("*:"+ uid +":"+ date +":*").Result()
 	for _, a := range alerts{
 		DeleteKey(a)
 	}

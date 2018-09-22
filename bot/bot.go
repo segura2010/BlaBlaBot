@@ -96,11 +96,7 @@ func listenMessages(){
             }
         }else if strings.Index(message.Text, "/delete ") == 0 {
             date := message.Text[8:]
-            err := redisdb.DeleteTask(userId, date)
-            if err != nil{
-                myBot.Bot.SendMessage(message.Chat, "There was an error deleting your subscription 😢", nil)
-                continue
-            }
+            redisdb.DeleteAllTaskRelatedStuff(userId, date)
             myBot.Bot.SendMessage(message.Chat, "Your subscription was deleted!", nil)
         }else if strings.Index(message.Text, "/me") == 0 {
             tasks, err := redisdb.GetUserTasks(userId)
