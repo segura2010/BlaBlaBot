@@ -74,8 +74,11 @@ func main(){
                     continue
                 }
                 diff := now.Sub(taskDate)
-                if diff > 0{
+                // log.Printf("Diff hours %f", diff.Hours())
+                if diff.Hours() > 18{
                     // task time passed, delete
+                    // >20h because it will delete at 00:00 (just at the start of the day)
+                    // example: with >20h, the task for 2018-09-23 will be deleted at 20:00 instead of at 00:00 (just at the start of the day)
                     log.Printf("Task %s date passed, deleting everything", t)
                     go redisdb.DeleteAllTaskRelatedStuff(splittedTask[1], date)
                     continue
